@@ -17,7 +17,7 @@ defmodule FiapxWeb do
   those modules here.
   """
 
-  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt uploads)
 
   def router do
     quote do
@@ -92,6 +92,9 @@ defmodule FiapxWeb do
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
+
+      import Phoenix.LiveView.Helpers
+      import Phoenix.Component
 
       # Routes generation with the ~p sigil
       unquote(verified_routes())
