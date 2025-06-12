@@ -16,7 +16,7 @@ defmodule Fiapx.Media.Persistence do
   end
 
   # Busca um vídeo por ID (lança erro se não encontrado)
-  def get_video!(id), do: Repo.get!(Video, id)
+  def get_video(id), do: Repo.get(Video, id)
 
   # Cria um novo vídeo
   def create_video(attrs \\ %{}) do
@@ -36,9 +36,8 @@ defmodule Fiapx.Media.Persistence do
   def delete_video(video_id) do
     video = Fiapx.Repo.get!(Fiapx.Media.Video, video_id)
 
-    # Apaga o arquivo físico, se existir
-    if File.exists?("priv/static" <> video.path) do
-      File.rm!("priv/static" <> video.path)
+    if File.exists?("priv/static/videos" <> video.path) do
+      File.rm!("priv/static/videos" <> video.path)
     end
 
     Fiapx.Repo.delete(video)
@@ -47,5 +46,34 @@ defmodule Fiapx.Media.Persistence do
   # Retorna um changeset para atualização
   def change_video(%Video{} = video, attrs \\ %{}) do
     Video.changeset(video, attrs)
+  end
+
+  def save_frames(video_id, frames_path) do
+    frames =
+      File.ls!(frames_path)
+      |> Enum.map(fn filename ->
+        %{
+          image_path: Path.join(frames_path, filename),
+          video_id: video_id
+        }
+      end)
+
+    Enum.each(frames, fn data ->
+      Repo.insert!(Fiapx.Media.Frame.changeset(%Fiapx.Media.Frame{}, data))
+    end)
+
+    zip_path = Path.join(["uploads/zips", "#{video_id}.zip"]) |> String.to_charlist()
+    frame_path = Path.join(["uploads/frames", "#{video_id}"]) |> String.to_charlist()
+
+    filenames =
+      File.ls!("uploads/frames/#{video_id}")
+      |> Enum.map( fn frame ->
+        String.to_charlist(frame)
+      end)
+
+    :zip.create(zip_path,
+      filenames,
+      cwd: frame_path
+    )
   end
 end

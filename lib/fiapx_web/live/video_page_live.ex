@@ -37,13 +37,19 @@ defmodule FiapxWeb.VideoPageLive do
         <%= for video <- @videos do %>
           <div class="bg-white shadow p-4 rounded border">
             <p class="text-sm font-semibold mb-2 break-words"><%= video.filename %></p>
-
             <video width="100%" controls class="mb-2">
               <source src={video.path} type={video.content_type}>
               Seu navegador não suporta o elemento de vídeo.
-            </video>
-
             <p class="text-xs text-gray-500 mb-2"><%= video.content_type %></p>
+
+            </video>
+              <a
+                href={"/uploads/zips/#{video.id}.zip"}
+                download
+                class="text-blue-600 text-sm hover:underline block mt-2"
+              >
+                Baixar Frames (.zip)
+              </a>
 
             <button
               type="button"
@@ -73,47 +79,89 @@ defmodule FiapxWeb.VideoPageLive do
 
   @impl Phoenix.LiveView
   def handle_event("delete_video", %{"id" => video_id}, socket) do
-    PersistenceVideo.delete_video(video_id)
+    case PersistenceVideo.get_video(video_id) do
+      nil ->
+        {:noreply, socket}
 
-    current_user = socket.assigns.current_user
-    videos = PersistenceVideo.list_user_videos(current_user.id)
 
-    {:noreply, assign(socket, :videos, videos)}
-  end
+      video ->
+        file_path = Path.join(["/app", video.path])
+        if File.exists?(file_path), do: File.rm(file_path)
 
-  @impl Phoenix.LiveView
-  def handle_event("save", _params, socket) do
-    upload = socket.assigns.uploads.video
-    [entry | _] = upload.entries
-    name = entry.client_name
-    type = entry.client_type
+        frames_dir = Path.join(["/app/uploads/frames", video.id])
+        if File.dir?(frames_dir), do: File.rm_rf!(frames_dir)
 
-    uploaded_paths =
-      consume_uploaded_entries(socket, :video, fn %{path: path}, _meta ->
-        dest = Path.join(["priv/static/uploads/videos", name])
-        File.mkdir_p!(Path.dirname(dest))
-        File.cp!(path, dest)
+        zip_path = Path.join(["/app/uploads/zips", "#{video.id}.zip"])
+        if File.exists?(zip_path), do: File.rm_rf!(zip_path)
 
-        url_path = "/uploads/videos/#{name}"
+        PersistenceVideo.delete_video(video_id)
 
         current_user = socket.assigns.current_user
+        videos = PersistenceVideo.list_user_videos(current_user.id)
 
-        PersistenceVideo.create_video(%{
-          filename: name,
-          content_type: type,
-          path: url_path,
-          user_id: current_user.id
-        }) |> IO.inspect()
+        {:noreply, assign(socket, :videos, videos)}
+    end
+  end
 
-        {:ok, url_path}
-      end)
+ @impl Phoenix.LiveView
+  def handle_event("save", _params, socket) do
+    upload = socket.assigns.uploads.video
 
-  current_user = socket.assigns.current_user
-  videos = PersistenceVideo.list_user_videos(current_user.id)
+    case List.first(upload.entries) do
+      nil ->
+        {:noreply,
+        socket
+        |> assign(:upload_error, "Nenhum vídeo selecionado para upload.")}
 
-  {:noreply,
-   socket
-   |> assign(:uploaded_video_url, List.first(uploaded_paths))
-   |> assign(:videos, videos)}
+      entry ->
+        name =
+          entry.client_name
+            |> String.downcase()
+            |> String.replace(~r/[^a-z0-9\-_\.]/, "_")
+            |> Path.basename()
+
+        type = entry.client_type
+
+        uploaded_paths =
+          consume_uploaded_entries(socket, :video, fn %{path: path}, _meta ->
+            dest = Path.join(["/app/uploads/videos", name])
+            Path.dirname(dest)
+            File.cp!(path, dest)
+
+            url_path = "/uploads/videos/#{name}"
+
+            current_user = socket.assigns.current_user
+
+            {:ok, video} =
+              PersistenceVideo.create_video(%{
+                filename: name,
+                content_type: type,
+                path: url_path,
+                user_id: current_user.id
+              })
+
+            absolute_input_path = Path.join(["/app/uploads/videos", name])
+            frames_output_dir = Path.join(["/app/uploads/frames", video.id])
+            File.mkdir_p!(frames_output_dir)
+
+            Fiapx.Media.FrameExtractor.extract_frames(%{
+              input_video: absolute_input_path,
+              output_path: frames_output_dir
+            })
+
+            PersistenceVideo.save_frames(video.id, frames_output_dir)
+
+            {:ok, url_path}
+          end)
+
+        current_user = socket.assigns.current_user
+        videos = PersistenceVideo.list_user_videos(current_user.id)
+
+        {:noreply,
+        socket
+        |> assign(:uploaded_video_url, List.first(uploaded_paths))
+        |> assign(:videos, videos)
+        |> assign(:upload_error, nil)}
+    end
   end
 end

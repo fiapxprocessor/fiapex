@@ -1,25 +1,38 @@
-version: '2'
+version: '3.8'
+
 services:
   app:
-    image: phoenix:latest
-    build: .
-    command: >
-      /bin/sh -c "mix ecto.create && mix ecto.migrate && mix deps.get && mix compile && iex -S mix phx.server "
-    volumes:
-      - .:/app
-      - ./uploads:/app/priv/static/uploads/videos
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "4000:4000"
+    volumes:
+      - shared_storage:/app/uploads
+    environment:
+      MIX_ENV: dev
     depends_on:
       - postgres
+      - storage
 
   postgres:
-    image: postgres:latest
+    image: postgres:13
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fiapx_dev
-    volumes:
-      - /postgres-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  storage:
+    image: alpine
+    command: /bin/sh -c "mkdir -p /mnt/storage/videos /mnt/storage/frames /mnt/storage/zips && tail -f /dev/null"
+    volumes:
+      - shared_storage:/mnt/storage
+    restart: always
+
+volumes:
+  pgdata:
+  shared_storage:
