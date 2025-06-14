@@ -17,7 +17,8 @@ defmodule Fiapx.Application do
       # Start a worker by calling: Fiapx.Worker.start_link(arg)
       # {Fiapx.Worker, arg},
       # Start to serve requests, typically the last entry
-      FiapxWeb.Endpoint
+      FiapxWeb.Endpoint,
+      Fiapx.Worker.VideoSupervisor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

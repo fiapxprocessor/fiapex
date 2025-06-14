@@ -8,9 +8,8 @@ services:
     ports:
       - "4000:4000"
     volumes:
+      - .:/app 
       - shared_storage:/app/uploads
-    environment:
-      MIX_ENV: dev
     depends_on:
       - postgres
       - storage

@@ -58,7 +58,15 @@ defmodule Fiapx.Accounts do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id)
+  def get_user!(id) do
+    case Ecto.UUID.dump(id) do
+      {:ok, _} ->
+        Repo.get!(User, id)
+
+      :error ->
+        {:error, :invalid_id}
+    end
+  end
 
   ## User registration
 

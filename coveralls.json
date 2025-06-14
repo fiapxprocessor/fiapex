@@ -1,0 +1,10 @@
+{
+    "skip_files": [
+        "lib/fiapx.ex",
+        "lib/fiapx/repo.ex",
+        "lib/fiapx_web/components/layouts.ex",
+        "lib/fiapx_web/gettext.ex",
+        "lib/fiapx_web/endpoint.ex ",
+        "lib/fiapx_web/controllers/page_html.ex "
+    ]
+}

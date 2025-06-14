@@ -37,9 +37,8 @@ defmodule Fiapx.AccountsTest do
 
   describe "get_user!/1" do
     test "raises if id is invalid" do
-      assert_raise Ecto.NoResultsError, fn ->
-        Accounts.get_user!(-1)
-      end
+      user = Accounts.get_user!("invalid_uuid")
+      assert user == {:error, :invalid_id}
     end
 
     test "returns the user with the given id" do

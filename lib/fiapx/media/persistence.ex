@@ -11,7 +11,7 @@ defmodule Fiapx.Media.Persistence do
 
   # Lista todos os vídeos de um usuário específico
   def list_user_videos(user_id) do
-    from(v in Video, where: v.user_id == ^user_id)
+    from(v in Video, where: v.user_id == ^user_id, preload: [:frames])
     |> Repo.all()
   end
 
@@ -48,30 +48,34 @@ defmodule Fiapx.Media.Persistence do
     Video.changeset(video, attrs)
   end
 
+  def list_frames(video_id) do
+    Repo.all(Fiapx.Media.Frame, where: video_id)
+  end
+
   def save_frames(video_id, frames_path) do
+    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
     frames =
       File.ls!(frames_path)
       |> Enum.map(fn filename ->
         %{
           image_path: Path.join(frames_path, filename),
-          video_id: video_id
+          video_id: video_id,
+          inserted_at: now,
+          updated_at: now
         }
       end)
 
-    Enum.each(frames, fn data ->
-      Repo.insert!(Fiapx.Media.Frame.changeset(%Fiapx.Media.Frame{}, data))
-    end)
+    Repo.insert_all(Fiapx.Media.Frame, frames)
 
     zip_path = Path.join(["uploads/zips", "#{video_id}.zip"]) |> String.to_charlist()
     frame_path = Path.join(["uploads/frames", "#{video_id}"]) |> String.to_charlist()
 
     filenames =
       File.ls!("uploads/frames/#{video_id}")
-      |> Enum.map( fn frame ->
-        String.to_charlist(frame)
-      end)
+      |> Enum.map(&String.to_charlist/1)
 
-    :zip.create(zip_path,
+    :zip.create(
+      zip_path,
       filenames,
       cwd: frame_path
     )

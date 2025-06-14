@@ -7,18 +7,18 @@ defmodule FiapxWeb.VideoPageLive do
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
 
-      socket =
-        socket
-        |> assign(:uploaded_video_url, nil)
-        |> assign(:videos, PersistenceVideo.list_user_videos(current_user.id))
-        |> allow_upload(:video,
-          accept: ~w(.mp4 .mov .avi),
-          max_entries: 1,
-          max_file_size: 100_000_000
-        )
+    socket =
+      socket
+      |> assign(:uploaded_video_url, nil)
+      |> assign(:videos, PersistenceVideo.list_user_videos(current_user.id))
+      |> allow_upload(:video,
+        accept: ~w(.mp4 .mov .avi),
+        max_entries: 3,
+        max_file_size: 500_000_000
+      )
 
-      {:ok, socket}
-    end
+    {:ok, socket}
+  end
 
   @impl Phoenix.LiveView
   def render(assigns) do
@@ -30,19 +30,23 @@ defmodule FiapxWeb.VideoPageLive do
         <.live_file_input upload={@uploads.video} />
         <button type="submit" class="ml-4 px-4 py-2 bg-blue-600 text-white rounded">Upload</button>
       </form>
+      <ul>
+        <%= for entry <- @uploads.video.entries do %>
+          <li>{entry.client_name} (aguardando envio...)</li>
+        <% end %>
+      </ul>
 
       <h3 class="text-xl font-semibold mb-4">Seus Vídeos</h3>
-
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         <%= for video <- @videos do %>
           <div class="bg-white shadow p-4 rounded border">
-            <p class="text-sm font-semibold mb-2 break-words"><%= video.filename %></p>
+            <p class="text-sm font-semibold mb-2 break-words">{video.filename}</p>
             <video width="100%" controls class="mb-2">
-              <source src={video.path} type={video.content_type}>
+              <source src={video.path} type={video.content_type} />
               Seu navegador não suporta o elemento de vídeo.
-            <p class="text-xs text-gray-500 mb-2"><%= video.content_type %></p>
-
+              <p class="text-xs text-gray-500 mb-2">{video.content_type}</p>
             </video>
+            <%= if Enum.any?(video.frames) do %>
               <a
                 href={"/uploads/zips/#{video.id}.zip"}
                 download
@@ -50,6 +54,9 @@ defmodule FiapxWeb.VideoPageLive do
               >
                 Baixar Frames (.zip)
               </a>
+            <% else %>
+              <p class="text-gray-400 text-sm mt-2">Frames em processamento...</p>
+            <% end %>
 
             <button
               type="button"
@@ -66,7 +73,6 @@ defmodule FiapxWeb.VideoPageLive do
     """
   end
 
-
   @impl Phoenix.LiveView
   def handle_event("validate", _params, socket) do
     {:noreply, socket}
@@ -74,7 +80,7 @@ defmodule FiapxWeb.VideoPageLive do
 
   @impl Phoenix.LiveView
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
-    {:noreply, cancel_upload(socket, :avatar, ref)}
+    {:noreply, cancel_upload(socket, :video, ref)}
   end
 
   @impl Phoenix.LiveView
@@ -82,7 +88,6 @@ defmodule FiapxWeb.VideoPageLive do
     case PersistenceVideo.get_video(video_id) do
       nil ->
         {:noreply, socket}
-
 
       video ->
         file_path = Path.join(["/app", video.path])
@@ -103,65 +108,47 @@ defmodule FiapxWeb.VideoPageLive do
     end
   end
 
- @impl Phoenix.LiveView
+  @impl Phoenix.LiveView
   def handle_event("save", _params, socket) do
     upload = socket.assigns.uploads.video
 
-    case List.first(upload.entries) do
-      nil ->
-        {:noreply,
-        socket
-        |> assign(:upload_error, "Nenhum vídeo selecionado para upload.")}
+    if upload.entries == [] do
+      {:noreply,
+       socket
+       |> assign(:upload_error, "Nenhum vídeo selecionado para upload.")}
+    else
+      lv_pid = self()
 
-      entry ->
-        name =
-          entry.client_name
-            |> String.downcase()
-            |> String.replace(~r/[^a-z0-9\-_\.]/, "_")
-            |> Path.basename()
+      consume_uploaded_entries(socket, :video, fn %{path: path},
+                                                  %{client_name: name, client_type: type} ->
+        safe_name =
+          name
+          |> String.downcase()
+          |> String.replace(~r/[^a-z0-9\-_\.]/, "_")
+          |> Path.basename()
 
-        type = entry.client_type
+        dest = Path.join(["/app/uploads/videos", safe_name])
+        File.cp!(path, dest)
 
-        uploaded_paths =
-          consume_uploaded_entries(socket, :video, fn %{path: path}, _meta ->
-            dest = Path.join(["/app/uploads/videos", name])
-            Path.dirname(dest)
-            File.cp!(path, dest)
+        Fiapx.Worker.VideoSupervisor.start_video_job({safe_name, type, socket, lv_pid})
+      end)
 
-            url_path = "/uploads/videos/#{name}"
-
-            current_user = socket.assigns.current_user
-
-            {:ok, video} =
-              PersistenceVideo.create_video(%{
-                filename: name,
-                content_type: type,
-                path: url_path,
-                user_id: current_user.id
-              })
-
-            absolute_input_path = Path.join(["/app/uploads/videos", name])
-            frames_output_dir = Path.join(["/app/uploads/frames", video.id])
-            File.mkdir_p!(frames_output_dir)
-
-            Fiapx.Media.FrameExtractor.extract_frames(%{
-              input_video: absolute_input_path,
-              output_path: frames_output_dir
-            })
-
-            PersistenceVideo.save_frames(video.id, frames_output_dir)
-
-            {:ok, url_path}
-          end)
-
-        current_user = socket.assigns.current_user
-        videos = PersistenceVideo.list_user_videos(current_user.id)
-
-        {:noreply,
-        socket
-        |> assign(:uploaded_video_url, List.first(uploaded_paths))
-        |> assign(:videos, videos)
-        |> assign(:upload_error, nil)}
+      {:noreply,
+       socket
+       |> put_flash(:info, "Vídeos enviados. O processamento será feito em segundo plano.")
+       |> assign(:uploaded_video_url, nil)
+       |> assign(:upload_error, nil)}
     end
+  end
+
+  @impl true
+  def handle_info({:video_processed, video}, socket) do
+    current_user = socket.assigns.current_user
+    videos = PersistenceVideo.list_user_videos(current_user.id)
+
+    {:noreply,
+     socket
+     |> put_flash(:info, "Vídeo #{video.filename} foi processado com sucesso.")
+     |> assign(:videos, videos)}
   end
 end

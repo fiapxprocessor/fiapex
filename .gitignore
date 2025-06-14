@@ -1,5 +1,6 @@
 # The directory Mix will write compiled artifacts to.
 /_build/
+/.elixir_ls
 
 # If you run "mix test --cover", coverage assets end up here.
 /cover/
@@ -30,8 +31,6 @@ fiapx-*.tar
 
 # Ignore digested assets cache.
 /priv/static/cache_manifest.json
-
-uploads
 
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
