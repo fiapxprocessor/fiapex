@@ -7,18 +7,27 @@ defmodule Fiapx.Media.PersistenceTest do
 
   describe "list_videos/0" do
     setup do
-      user = %User{}
-             |> User.registration_changeset(%{email: "user@example.com", password: "Teste@123completo"})
-             |> Repo.insert!()
+      user =
+        %User{}
+        |> User.registration_changeset(%{email: "user@example.com", password: "Teste@123completo"})
+        |> Repo.insert!()
 
       video1 =
         %Video{}
-        |> Video.changeset(%{filename: "video1.mp4", path: "/uploads/video1.mp4", user_id: user.id})
+        |> Video.changeset(%{
+          filename: "video1.mp4",
+          path: "/uploads/video1.mp4",
+          user_id: user.id
+        })
         |> Repo.insert!()
 
       video2 =
         %Video{}
-        |> Video.changeset(%{filename: "video2.mp4", path: "/uploads/video2.mp4", user_id: user.id})
+        |> Video.changeset(%{
+          filename: "video2.mp4",
+          path: "/uploads/video2.mp4",
+          user_id: user.id
+        })
         |> Repo.insert!()
 
       {:ok, user: user, videos: [video1, video2]}
@@ -37,27 +46,45 @@ defmodule Fiapx.Media.PersistenceTest do
     setup do
       user1 =
         %User{}
-        |> User.registration_changeset(%{email: "user1@example.com", password: "Teste@123completo"})
+        |> User.registration_changeset(%{
+          email: "user1@example.com",
+          password: "Teste@123completo"
+        })
         |> Repo.insert!()
 
       user2 =
         %User{}
-        |> User.registration_changeset(%{email: "user2@example.com", password: "Teste@123completo"})
+        |> User.registration_changeset(%{
+          email: "user2@example.com",
+          password: "Teste@123completo"
+        })
         |> Repo.insert!()
 
       video1 =
         %Video{}
-        |> Video.changeset(%{filename: "video1.mp4", path: "/uploads/video1.mp4", user_id: user1.id})
+        |> Video.changeset(%{
+          filename: "video1.mp4",
+          path: "/uploads/video1.mp4",
+          user_id: user1.id
+        })
         |> Repo.insert!()
 
       video2 =
         %Video{}
-        |> Video.changeset(%{filename: "video2.mp4", path: "/uploads/video2.mp4", user_id: user1.id})
+        |> Video.changeset(%{
+          filename: "video2.mp4",
+          path: "/uploads/video2.mp4",
+          user_id: user1.id
+        })
         |> Repo.insert!()
 
       _video3 =
         %Video{}
-        |> Video.changeset(%{filename: "video3.mp4", path: "/uploads/video3.mp4", user_id: user2.id})
+        |> Video.changeset(%{
+          filename: "video3.mp4",
+          path: "/uploads/video3.mp4",
+          user_id: user2.id
+        })
         |> Repo.insert!()
 
       for {video, filenames} <- [{video1, ["frame1.png", "frame2.png"]}, {video2, ["frame3.png"]}],
@@ -137,8 +164,11 @@ defmodule Fiapx.Media.PersistenceTest do
     end
 
     test "list_frames/1 retorna frames do vídeo", %{video: video} do
-      frame1 = %Frame{} |> Frame.changeset(%{image_path: "f1.png", video_id: video.id}) |> Repo.insert!()
-      frame2 = %Frame{} |> Frame.changeset(%{image_path: "f2.png", video_id: video.id}) |> Repo.insert!()
+      frame1 =
+        %Frame{} |> Frame.changeset(%{image_path: "f1.png", video_id: video.id}) |> Repo.insert!()
+
+      frame2 =
+        %Frame{} |> Frame.changeset(%{image_path: "f2.png", video_id: video.id}) |> Repo.insert!()
 
       result = Persistence.list_frames(video.id)
       assert length(result) == 2

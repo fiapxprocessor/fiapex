@@ -70,6 +70,7 @@ defmodule Fiapx.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:ffmpex, "~> 0.11.0"},
+      {:kaffe, "~> 1.0"},
       {:excoveralls, "~> 0.18", only: [:test]}
     ]
   end

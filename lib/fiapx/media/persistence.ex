@@ -54,6 +54,7 @@ defmodule Fiapx.Media.Persistence do
 
   def save_frames(video_id, frames_path) do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+
     frames =
       File.ls!(frames_path)
       |> Enum.map(fn filename ->

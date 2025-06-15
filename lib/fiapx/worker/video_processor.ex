@@ -1,5 +1,7 @@
 defmodule Fiapx.Worker.VideoProcessor do
+  require Logger
   alias Fiapx.Media.Persistence, as: PersistenceVideo
+  alias Fiapx.Producer.Message
 
   def process({name, type, socket, liv_pid}) do
     url_path = "/uploads/videos/#{name}"
@@ -22,10 +24,17 @@ defmodule Fiapx.Worker.VideoProcessor do
       output_path: frames_output_dir
     })
 
-    PersistenceVideo.save_frames(video.id, frames_output_dir)
+    case PersistenceVideo.save_frames(video.id, frames_output_dir) do
+      {:ok, _} ->
+        send(liv_pid, {:video_processed, video})
+        Logger.info("Video with id: #{video.id}, was succefull saved")
+        Message.producer_message_kafka(video.id, current_user.id, "processed_video")
+        {:ok, url_path}
 
-    send(liv_pid, {:video_processed, video})
-
-    {:ok, url_path}
+      {:error, reason} ->
+        Logger.error("Error occurrs with reason: #{inspect(reason)}")
+        Message.producer_message_kafka(video.id, current_user.id, "error_processed_video")
+        {:error, url_path}
+    end
   end
 end

@@ -21,14 +21,15 @@ defmodule FiapxWeb.VideoPageLiveTest do
 
     {:ok, view, _html} = live(conn, "/videos/upload")
 
-    upload = file_input(view, "#upload-form", :video, [
-      %{
-        last_modified: 0,
-        name: "sample_video.mp4",
-        content: File.read!(source_path),
-        type: "video/mp4"
-      }
-    ])
+    upload =
+      file_input(view, "#upload-form", :video, [
+        %{
+          last_modified: 0,
+          name: "sample_video.mp4",
+          content: File.read!(source_path),
+          type: "video/mp4"
+        }
+      ])
 
     assert render_upload(upload, "sample_video.mp4")
 
