@@ -14,14 +14,6 @@ defmodule Fiapx.MixProject do
         tool: ExCoveralls,
         minimum_coverage: 80
       ],
-      skip_files: [
-        "lib/fiapx.ex",
-        "lib/fiapx/repo.ex",
-        "lib/fiapx_web/components/layouts.ex",
-        "lib/fiapx_web/gettext.ex",
-        "lib/fiapx_web/endpoint.ex",
-        "lib/fiapx_web/controllers/page_html.ex"
-      ],
       preferred_cli_env: [
         coveralls: :test,
         "coveralls.detail": :test,
