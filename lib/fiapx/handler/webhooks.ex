@@ -4,7 +4,6 @@ defmodule Fiapx.Handler.Webhooks do
   plug Tesla.Middleware.BaseUrl, "http://app:4001/api"
   plug Tesla.Middleware.JSON
 
-
   def create_webhook(attrs) do
     post("/webhooks", attrs)
   end

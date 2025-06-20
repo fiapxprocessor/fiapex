@@ -23,7 +23,7 @@ jobs:
     # use Postgres. This creates a database for running tests.
     # Additional services can be defined here if required.
     services:
-      postgres:
+      db:
         image: postgres:12
         ports: ["5432:5432"]
         env:
@@ -118,73 +118,3 @@ jobs:
       # Step: Execute the coveralls.
       - name: Run Coveralls (GitHub format)
         run: mix coveralls
-
-  deploy_to_ec2:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: test
-    runs-on: ubuntu-latest
-    env:
-      MIX_ENV: prod
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: 25.0.4
-          elixir-version: 1.14.1
-
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Compile project
-        run: mix compile
-
-      - name: Create release
-        run: mix release
-
-      - name: Archive release
-        run: tar -czf management_api.tar.gz -C _build/prod/rel/management_api .
-
-      - name: Upload release to EC2
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "management_api.tar.gz"
-          target: "~/app"
-
-      - name: Run deploy commands on EC2
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd ~/app
-            tar -xzf management_api.tar.gz
-            export SECRET_KEY_BASE=${{ secrets.SECRET_KEY_BASE }}
-            export PHX_HOST=${{ secrets.PHX_HOST }}
-            export PORT=4001
-            export MIX_ENV=prod
-            export PHX_SERVER=true
-
-            # Variáveis do banco de dados
-            export DB_USERNAME=${{ secrets.DB_USERNAME }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export DB_PORT=${{ secrets.DB_PORT }}
-            export POOL_SIZE=${{ secrets.POOL_SIZE }}
-
-            export DATABASE_URL=${{ secrets.DATABASE_URL }}
-
-            # Parar release anterior
-            ./bin/management_api stop || true
-
-            # Rodar nova release
-            ./bin/management_api daemon
-            ./bin/management_api eval "ManagementApi.Release.migrate"

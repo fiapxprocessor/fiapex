@@ -8,10 +8,17 @@ config :bcrypt_elixir, :log_rounds, 1
 # The MIX_TEST_PARTITION environment variable can be used
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
+
+hostname =
+  case System.get_env("GITHUB_ACTIONS") do
+    "true" -> "localhost"
+    _ -> "postgres_notifications"
+  end
+
 config :fiapx, Fiapx.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "postgres",
+  hostname: hostname,
   database: "fiapx_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2

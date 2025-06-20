@@ -9,10 +9,10 @@ defmodule FiapxWeb.VideoPageLive do
     current_user = socket.assigns.current_user
 
     webhooks =
-    case Webhooks.list_webhooks(current_user.id) do
-      {:ok, %Tesla.Env{status: 200, body: %{"data" => list}}} -> list
-      _ -> []
-    end
+      case Webhooks.list_webhooks(current_user.id) do
+        {:ok, %Tesla.Env{status: 200, body: %{"data" => list}}} -> list
+        _ -> []
+      end
 
     socket =
       socket
@@ -32,21 +32,28 @@ defmodule FiapxWeb.VideoPageLive do
   def render(assigns) do
     ~H"""
     <%= if Enum.empty?(@webhooks) do %>
-      <h2 class="text-xl font-semibold mt-8 mb-4">Defina aqui o endpoint de notificacao que deseja receber</h2>
+      <h2 class="text-xl font-semibold mt-8 mb-4">
+        Defina aqui o endpoint de notificacao que deseja receber
+      </h2>
       <form phx-submit="create_webhook" class="mb-6">
-        <input type="text" name="endpoint" placeholder="URL do webhook" class="border rounded px-2 py-1 mr-2" required />
+        <input
+          type="text"
+          name="endpoint"
+          placeholder="URL do webhook"
+          class="border rounded px-2 py-1 mr-2"
+          required
+        />
         <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded">Criar Webhook</button>
       </form>
-      <% else %>
-          <ul>
-                <%= for webhook <- @webhooks do %>
-                  <li class="text-sm text-gray-800">
-                    <strong>Endpoint de notificacao: </strong><%= webhook["endpoint"] %>
-                  </li>
-                <% end %>
-              </ul>
-      <% end %>
-
+    <% else %>
+      <ul>
+        <%= for webhook <- @webhooks do %>
+          <li class="text-sm text-gray-800">
+            <strong>Endpoint de notificacao: </strong>{webhook["endpoint"]}
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
 
     <div class="max-w-6xl mx-auto mt-10 px-4">
       <h2 class="text-2xl font-bold mb-4">Upload de Vídeo</h2>
@@ -177,14 +184,14 @@ defmodule FiapxWeb.VideoPageLive do
      |> assign(:videos, videos)}
   end
 
- @impl Phoenix.LiveView
+  @impl Phoenix.LiveView
   def handle_event("create_webhook", %{"endpoint" => endpoint}, socket) do
     current_user = socket.assigns.current_user
 
     case Webhooks.create_webhook(%{
-          endpoint: endpoint,
-          user_id: current_user.id
-        }) do
+           endpoint: endpoint,
+           user_id: current_user.id
+         }) do
       {:ok, %Tesla.Env{status: 201}} ->
         updated_webhooks =
           case Webhooks.list_webhooks(current_user.id) do
@@ -193,9 +200,9 @@ defmodule FiapxWeb.VideoPageLive do
           end
 
         {:noreply,
-        socket
-        |> put_flash(:info, "Webhook criado com sucesso.")
-        |> assign(:webhooks, updated_webhooks)}
+         socket
+         |> put_flash(:info, "Webhook criado com sucesso.")
+         |> assign(:webhooks, updated_webhooks)}
 
       _ ->
         {:noreply, put_flash(socket, :error, "Erro ao criar webhook.")}
