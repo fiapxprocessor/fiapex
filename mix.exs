@@ -71,7 +71,9 @@ defmodule Fiapx.MixProject do
       {:bandit, "~> 1.5"},
       {:ffmpex, "~> 0.11.0"},
       {:kaffe, "~> 1.0"},
-      {:excoveralls, "~> 0.18", only: [:test]}
+      {:excoveralls, "~> 0.18", only: [:test]},
+      {:tesla, "~> 1.11"},
+      {:hackney, "~> 1.9"}
     ]
   end
 
