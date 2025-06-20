@@ -141,6 +141,31 @@ defmodule FiapxWeb.VideoPageLive do
   end
 
   @impl Phoenix.LiveView
+  def handle_event("create_webhook", %{"endpoint" => endpoint}, socket) do
+    current_user = socket.assigns.current_user
+
+    case Webhooks.create_webhook(%{
+           endpoint: endpoint,
+           user_id: current_user.id
+         }) do
+      {:ok, %Tesla.Env{status: 201}} ->
+        updated_webhooks =
+          case Webhooks.list_webhooks(current_user.id) do
+            {:ok, %Tesla.Env{status: 200, body: %{"data" => list}}} -> list
+            _ -> []
+          end
+
+        {:noreply,
+         socket
+         |> put_flash(:info, "Webhook criado com sucesso.")
+         |> assign(:webhooks, updated_webhooks)}
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Erro ao criar webhook.")}
+    end
+  end
+
+  @impl Phoenix.LiveView
   def handle_event("save", _params, socket) do
     upload = socket.assigns.uploads.video
 
@@ -182,30 +207,5 @@ defmodule FiapxWeb.VideoPageLive do
      socket
      |> put_flash(:info, "Vídeo #{video.filename} foi processado com sucesso.")
      |> assign(:videos, videos)}
-  end
-
-  @impl Phoenix.LiveView
-  def handle_event("create_webhook", %{"endpoint" => endpoint}, socket) do
-    current_user = socket.assigns.current_user
-
-    case Webhooks.create_webhook(%{
-           endpoint: endpoint,
-           user_id: current_user.id
-         }) do
-      {:ok, %Tesla.Env{status: 201}} ->
-        updated_webhooks =
-          case Webhooks.list_webhooks(current_user.id) do
-            {:ok, %Tesla.Env{status: 200, body: %{"data" => list}}} -> list
-            _ -> []
-          end
-
-        {:noreply,
-         socket
-         |> put_flash(:info, "Webhook criado com sucesso.")
-         |> assign(:webhooks, updated_webhooks)}
-
-      _ ->
-        {:noreply, put_flash(socket, :error, "Erro ao criar webhook.")}
-    end
   end
 end
