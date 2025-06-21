@@ -56,19 +56,15 @@ defmodule Fiapx.Media.Persistence do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
 
     frames =
-      case File.ls(frames_path) do
-        {:ok, files} ->
-          Enum.map(files, fn filename ->
-            %{
-              image_path: Path.join(frames_path, filename),
-              video_id: video_id
-            }
-          end)
-
-        {:error, reason} ->
-          Logger.error("Erro ao listar frames: #{inspect(reason)}")
-          []
-      end
+      File.ls!(frames_path)
+      |> Enum.map(fn filename ->
+        %{
+          image_path: Path.join(frames_path, filename),
+          video_id: video_id,
+          inserted_at: now,
+          updated_at: now
+        }
+      end)
 
     Repo.insert_all(Fiapx.Media.Frame, frames)
 

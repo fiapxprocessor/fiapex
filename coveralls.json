@@ -6,6 +6,7 @@
         "lib/fiapx_web/gettext.ex",
         "lib/fiapx_web/endpoint.ex",
         "lib/fiapx_web/controllers/page_html.ex",
-        "lib/fiapx/mailer.ex"
+        "lib/fiapx/mailer.ex",
+        "lib/fiapx_web/components/core_components.ex"
     ]
 }

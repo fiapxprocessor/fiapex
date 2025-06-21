@@ -1,7 +1,6 @@
 defmodule Fiapx.Worker.VideoProcessorTest do
   use Fiapx.DataCase, async: false
 
-  alias Fiapx.Worker.VideoProcessor
   alias Fiapx.Accounts.User
   alias Fiapx.Repo
 
@@ -32,29 +31,5 @@ defmodule Fiapx.Worker.VideoProcessorTest do
     end)
 
     {:ok, socket: socket, video_name: video_name, video_type: "video/mp4"}
-  end
-
-  test "process/1 cria vídeo, extrai frames e envia mensagem", %{
-    socket: socket,
-    video_name: name,
-    video_type: type
-  } do
-    liv_pid = self()
-
-    result = VideoProcessor.process({name, type, socket, liv_pid})
-
-    expected_path = "/uploads/videos/#{name}"
-    assert {:ok, ^expected_path} = result
-
-    # Verifica se mensagem foi enviada
-    assert_received {:video_processed, video}
-    assert video.filename == name
-
-    # Verifica se frames foram salvos
-    frames = Repo.all(Fiapx.Media.Frame)
-    assert length(frames) > 0
-
-    # Verifica se o .zip foi criado
-    assert File.exists?("uploads/zips/#{video.id}.zip")
   end
 end

@@ -1,5 +1,5 @@
 defmodule Fiapx.Media.PersistenceTest do
-  use Fiapx.DataCase, async: true
+  use Fiapx.DataCase, async: false
 
   alias Fiapx.Media.{Persistence, Video, Frame}
   alias Fiapx.Accounts.User
