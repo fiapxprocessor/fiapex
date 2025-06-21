@@ -18,7 +18,7 @@ jobs:
     name: Elixir Tests
 
     services:
-      postgres:
+      db:
         image: postgres:13
         ports:
           - 5432:5432
@@ -86,15 +86,6 @@ jobs:
 
       - name: Check Formatting
         run: mix format --check-formatted
-
-      - name: Wait for Postgres
-        run: |
-          for i in {1..15}; do
-            pg_isready -h postgres -p 5432 -U postgres && exit 0
-            echo "Waiting for Postgres..."
-            sleep 2
-          done
-          echo "Postgres not available" && exit 1
 
       - name: Wait for Kafka
         run: |
