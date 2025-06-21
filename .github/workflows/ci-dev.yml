@@ -55,6 +55,15 @@ jobs:
         elixir: ["1.16.1"]
 
     steps:
+      - name: Start Kafka
+        uses: 280780363/kafka-action@v1.0
+        with:
+          kafka version: "latest"
+          zookeeper version: "latest"
+          kafka port: 29092
+          zookeeper port: 2181
+          auto create topic: "true"
+          
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
@@ -86,15 +95,6 @@ jobs:
 
       - name: Check Formatting
         run: mix format --check-formatted
-
-      - name: Wait for Kafka
-        run: |
-          for i in {1..20}; do
-            nc -z kafka 29092 && echo "Kafka is up!" && exit 0
-            echo "Waiting for Kafka..."
-            sleep 3
-          done
-          echo "Kafka not available" && exit 1
 
       - name: Create fake storage
         run: |
