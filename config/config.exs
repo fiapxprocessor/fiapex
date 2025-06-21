@@ -61,15 +61,9 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-hostname =
-  case System.get_env("GITHUB_ACTIONS") do
-    "true" -> [localhost: 29092]
-    _ -> [kafka: 29092]
-  end
-
 config :kaffe,
   producer: [
-    endpoints: hostname,
+    endpoints: [kafka: 29092],
     topics: ["notifications"]
   ]
 
