@@ -101,7 +101,6 @@ jobs:
           sudo mkdir -p /app/uploads/zips
           sudo cp test/support/sample_video.mp4 /app/uploads/videos/
           sudo chown -R $USER:$USER /app/uploads
-          ls -l /app/uploads/videos/
 
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
