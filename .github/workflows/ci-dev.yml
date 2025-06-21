@@ -86,7 +86,7 @@ jobs:
       - name: Test Kafka host
         run: |
           getent hosts kafka
-          curl kafka:29092 || true
+          curl localhost:29092 || true
 
       - name: Install deps
         run: mix deps.get
