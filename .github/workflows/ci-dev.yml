@@ -96,10 +96,11 @@ jobs:
 
       - name: Create fake storage
         run: |
-          mkdir -p /app/uploads/videos
-          mkdir -p /app/uploads/frames
-          mkdir -p /app/uploads/zips
-          cp test/support/sample_video.mp4 /app/uploads/videos/
+          sudo mkdir -p /app/uploads/videos
+          sudo mkdir -p /app/uploads/frames
+          sudo mkdir -p /app/uploads/zips
+          sudo cp test/support/sample_video.mp4 /app/uploads/videos/
+          sudo chown -R $USER:$USER /app/uploads
           ls -l /app/uploads/videos/
 
       - name: Install ffmpeg
