@@ -83,15 +83,6 @@ jobs:
           key: ${{ runner.os }}-build-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-build-
 
-      - name: Wait for Kafka to be ready
-        run: |
-          for i in {1..40}; do
-            getent hosts kafka && nc -z kafka 29092 && echo "Kafka is up!" && exit 0
-            echo "Waiting for Kafka to resolve and open port..."
-            sleep 4
-          done
-          echo "Kafka not available" && exit 1
-
       - name: Test Kafka host
         run: |
           getent hosts kafka
