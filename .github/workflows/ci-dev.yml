@@ -40,6 +40,11 @@ jobs:
 
       kafka:
         image: confluentinc/cp-server:7.2.1
+        options: >-
+          --health-cmd "nc -z localhost 29092"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
         env:
           KAFKA_BROKER_ID: 1
           KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
