@@ -83,11 +83,6 @@ jobs:
           key: ${{ runner.os }}-build-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-build-
 
-      - name: Test Kafka host
-        run: |
-          getent hosts kafka
-          curl localhost:29092 || true
-
       - name: Install deps
         run: mix deps.get
 
