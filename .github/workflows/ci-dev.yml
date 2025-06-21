@@ -40,6 +40,8 @@ jobs:
 
       kafka:
         image: confluentinc/cp-server:7.2.1
+        ports:
+          - "29092:29092"
         options: >-
           --health-cmd "nc -z localhost 29092"
           --health-interval 10s
