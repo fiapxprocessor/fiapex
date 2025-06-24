@@ -8,6 +8,7 @@ defmodule Fiapx.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      Fiapx.PromEx,
       FiapxWeb.Telemetry,
       Fiapx.Repo,
       {DNSCluster, query: Application.get_env(:fiapx, :dns_cluster_query) || :ignore},

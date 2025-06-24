@@ -46,10 +46,19 @@ defmodule FiapxWeb.VideoPageLive do
         <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded">Criar Webhook</button>
       </form>
     <% else %>
-      <ul>
+      <ul class="mb-4">
         <%= for webhook <- @webhooks do %>
-          <li class="text-sm text-gray-800">
-            <strong>Endpoint de notificacao: </strong>{webhook["endpoint"]}
+          <li class="flex items-center justify-between text-sm text-gray-800 border-b py-2">
+            <div>
+              <strong>Endpoint:</strong> {webhook["endpoint"]}
+            </div>
+            <button
+              phx-click="delete_webhook"
+              phx-value-id={webhook["id"]}
+              class="text-red-600 text-sm hover:underline ml-4"
+            >
+              Deletar
+            </button>
           </li>
         <% end %>
       </ul>
@@ -162,6 +171,28 @@ defmodule FiapxWeb.VideoPageLive do
 
       _ ->
         {:noreply, put_flash(socket, :error, "Erro ao criar webhook.")}
+    end
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("delete_webhook", _params, socket) do
+    current_user = socket.assigns.current_user
+
+    case Webhooks.delete_webhook(current_user.id) do
+      {:ok, %Tesla.Env{status: 200}} ->
+        updated_webhooks =
+          case Webhooks.list_webhooks(current_user.id) do
+            {:ok, %Tesla.Env{status: 200, body: %{"data" => list}}} -> list
+            _ -> []
+          end
+
+        {:noreply,
+         socket
+         |> put_flash(:info, "Webhook deletado com sucesso.")
+         |> assign(:webhooks, updated_webhooks)}
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Erro ao deletar webhook.")}
     end
   end
 

@@ -14,4 +14,8 @@ defmodule Fiapx.Handler.Webhooks do
   def list_webhooks(user_id) do
     get("/webhooks", query: [user_id: user_id])
   end
+
+  def delete_webhook(user_id) do
+    delete("/webhooks/#{user_id}")
+  end
 end

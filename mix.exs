@@ -73,7 +73,8 @@ defmodule Fiapx.MixProject do
       {:kaffe, "~> 1.0"},
       {:excoveralls, "~> 0.18", only: [:test]},
       {:tesla, "~> 1.11"},
-      {:hackney, "~> 1.9"}
+      {:hackney, "~> 1.9"},
+      {:prom_ex, "~> 1.11.0"}
     ]
   end
 

@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :fiapx, Fiapx.PromEx,
+  disabled: false,
+  manual_metrics_start_delay: :no_delay,
+  drop_metrics_groups: [],
+  ecto_repos: [Fiapx.Repo],
+  grafana: [
+    host: "http://grafana:3000",
+    username: "admin",
+    password: "admin",
+    upload_dashboards_on_start: true
+  ],
+  metrics_server: :disabled
+
 config :fiapx,
   ecto_repos: [Fiapx.Repo],
   generators: [timestamp_type: :utc_datetime]
