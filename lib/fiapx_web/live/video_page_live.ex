@@ -66,8 +66,10 @@ defmodule FiapxWeb.VideoPageLive do
 
     <div class="max-w-6xl mx-auto mt-10 px-4">
       <h2 class="text-2xl font-bold mb-4">Upload de Vídeo</h2>
-
       <form id="upload-form" phx-submit="save" phx-change="validate" class="mb-8">
+        <p class="text-sm text-gray-600 mb-2">
+          Envie no máximo <strong>3 vídeos</strong> com até <strong>500MB</strong> cada.
+        </p>
         <.live_file_input upload={@uploads.video} />
         <button type="submit" class="ml-4 px-4 py-2 bg-blue-600 text-white rounded">Upload</button>
       </form>

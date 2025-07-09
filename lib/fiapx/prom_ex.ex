@@ -77,7 +77,7 @@ defmodule Fiapx.PromEx do
   @impl true
   def dashboard_assigns do
     [
-      datasource_id: "depnrvel42l8ge",
+      datasource_id: "cercvvj4p9yiod",
       default_selected_interval: "30s"
     ]
   end
