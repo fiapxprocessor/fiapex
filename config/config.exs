@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :fiapx, Fiapx.PromEx,
+  disabled: false,
+  manual_metrics_start_delay: :no_delay,
+  drop_metrics_groups: [],
+  ecto_repos: [Fiapx.Repo],
+  grafana: [
+    host: "http://grafana:3000",
+    username: "admin",
+    password: "admin",
+    upload_dashboards_on_start: true
+  ],
+  metrics_server: :disabled
+
 config :fiapx,
   ecto_repos: [Fiapx.Repo],
   generators: [timestamp_type: :utc_datetime]
@@ -60,6 +73,20 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+hostname =
+  case System.get_env("GITHUB_ACTIONS") do
+    "true" -> [localhost: 29092]
+    _ -> [kafka: 29092]
+  end
+
+config :kaffe,
+  producer: [
+    endpoints: hostname,
+    topics: ["notifications"]
+  ]
+
+config :tesla, disable_deprecated_builder_warning: true
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

@@ -9,7 +9,17 @@ defmodule Fiapx.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      test_coverage: [
+        tool: ExCoveralls,
+        minimum_coverage: 80
+      ],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.html": :test,
+        "coveralls.github": :test
+      ]
     ]
   end
 
@@ -32,6 +42,7 @@ defmodule Fiapx.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:bcrypt_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7.21"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.10"},
@@ -57,7 +68,13 @@ defmodule Fiapx.MixProject do
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:ffmpex, "~> 0.11.0"},
+      {:kaffe, "~> 1.0"},
+      {:excoveralls, "~> 0.18", only: [:test]},
+      {:tesla, "~> 1.11"},
+      {:hackney, "~> 1.9"},
+      {:prom_ex, "~> 1.11.0"}
     ]
   end
 

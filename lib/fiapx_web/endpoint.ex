@@ -19,11 +19,21 @@ defmodule FiapxWeb.Endpoint do
   #
   # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.
+  # Serve /uploads de ./uploads local
+  plug Plug.Static,
+    at: "/uploads",
+    from: Path.expand("./uploads"),
+    gzip: false,
+    only: ~w(videos frames zips)
+
+  # Serve os assets da aplicação (não remova!)
   plug Plug.Static,
     at: "/",
     from: :fiapx,
     gzip: false,
     only: FiapxWeb.static_paths()
+
+  plug PromEx.Plug, prom_ex_module: Fiapx.PromEx
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

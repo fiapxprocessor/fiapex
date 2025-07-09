@@ -8,6 +8,7 @@ defmodule Fiapx.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      Fiapx.PromEx,
       FiapxWeb.Telemetry,
       Fiapx.Repo,
       {DNSCluster, query: Application.get_env(:fiapx, :dns_cluster_query) || :ignore},
@@ -17,7 +18,8 @@ defmodule Fiapx.Application do
       # Start a worker by calling: Fiapx.Worker.start_link(arg)
       # {Fiapx.Worker, arg},
       # Start to serve requests, typically the last entry
-      FiapxWeb.Endpoint
+      FiapxWeb.Endpoint,
+      Fiapx.Worker.VideoSupervisor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
